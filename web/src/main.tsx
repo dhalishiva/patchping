@@ -13,6 +13,8 @@ import { Disclaimer, Privacy, Refunds, Terms } from "./pages/legal/Legal";
 import Dashboard from "./pages/app/Dashboard";
 import AppDetail from "./pages/app/AppDetail";
 import Settings from "./pages/app/Settings";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./styles.css";
 
 function Root() {
@@ -53,6 +55,8 @@ function Root() {
           </Route>
         </Routes>
       </BrowserRouter>
+      <Analytics />
+      <SpeedInsights />
     </SessionContext.Provider>
   );
 }

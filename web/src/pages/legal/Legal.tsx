@@ -149,7 +149,7 @@ export function Privacy() {
         <li><strong>Results:</strong> vulnerability matches for your packages and whether you dismissed or fixed them.</li>
         <li><strong>Technical logs:</strong> our hosting providers keep standard request logs (such as IP address and time) for security and debugging, for a limited period.</li>
       </ul>
-      <p>We do not use advertising trackers or sell your data. We don't use cookies for tracking; the app stores your sign-in session in your browser's local storage.</p>
+      <p>We do not use advertising trackers or sell your data. We count visits and measure page speed with Vercel's cookie-free analytics. We don't use cookies for tracking; the app stores your sign-in session in your browser's local storage.</p>
 
       <h2>Why we use it</h2>
       <ul>
@@ -163,7 +163,7 @@ export function Privacy() {
       <ul>
         <li><strong>Supabase</strong> hosts our database, sign-in and background jobs, in its Mumbai (ap-south-1) region.</li>
         <li><strong>Microsoft</strong> (Microsoft 365) delivers our emails.</li>
-        <li><strong>Vercel</strong> serves the website.</li>
+        <li><strong>Vercel</strong> serves the website and provides privacy-friendly visit and page-speed statistics (Vercel Web Analytics and Speed Insights). These don't use cookies and don't identify you.</li>
         <li><strong>Google Fonts</strong> serves the site's typefaces, which means your browser contacts Google when pages load.</li>
         <li><strong>OSV.dev</strong> receives package names and versions to check. It never receives your email or account details.</li>
       </ul>

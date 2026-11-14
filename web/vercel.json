@@ -2,7 +2,7 @@
   "functions": {
     "api/send-alerts.ts": { "maxDuration": 300 }
   },
-  "rewrites": [{ "source": "/((?!api/|assets/|favicon|logo|og|robots|sitemap).*)", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/((?!api/|_vercel/|assets/|favicon|logo|og|robots|sitemap).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
