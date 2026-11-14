@@ -11,5 +11,6 @@ jobs:
     steps:
       - name: Query the database through the REST API
         run: |
-          curl -fsS "https://vswctqwxvesjripvwsex.supabase.co/rest/v1/apps?select=id&limit=1" \
-            -H "apikey: sb_publishable_sbr7AEivTLoW5QV9ww-WCQ_PtFPLnyT" -o /dev/null -w "%{http_code}\n"
+          curl -fsS -X POST "https://vswctqwxvesjripvwsex.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_sbr7AEivTLoW5QV9ww-WCQ_PtFPLnyT" \
+            -H "Content-Type: application/json" -d '{}' -w "\n%{http_code}\n"
