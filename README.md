@@ -10,11 +10,11 @@ any new matches, with severity and the version that fixes it.
 
 ```
 web/                     React + Vite frontend (marketing site, legal pages, dashboard)
+  api/send-alerts.ts     Vercel function: emails new findings via Microsoft 365 SMTP
   src/lib/parsers.ts     Lockfile parsers (run in the browser; tested in parsers.test.ts)
 supabase/migrations/     Database schema, row-level security, pg_cron schedule
 supabase/functions/
   scan/                  Checks components against OSV.dev, stores new findings
-  notify/                Emails pending findings via Resend
   account/               Deletes the signed-in user's account
 .github/workflows/       Keep-alive ping so the free Supabase project never pauses
 ```
@@ -22,7 +22,7 @@ supabase/functions/
 ## How it runs
 
 - **Supabase project:** `vswctqwxvesjripvwsex` (region ap-south-1).
-- **Schedule (pg_cron):** `scan` at minute 0 every 6 hours, `notify` at minute 20, log cleanup daily.
+- **Schedule (pg_cron):** `scan` at minute 0 every 6 hours, alert emails (`/api/send-alerts` on Vercel) at minute 20, log cleanup daily.
   The scheduler secret is generated inside the database (`public.app_config`, service-role only).
 - **Users** can also run a scan on demand (limited to once a minute).
 - **Data stored:** email, alert settings, app names, package names and versions, findings. Uploaded files
@@ -52,19 +52,22 @@ host `smtp.office365.com`, port `587`, username and sender = the full mailbox ad
 
 ## Alert emails
 
-The `notify` function uses Microsoft Graph when these secrets are set (Supabase → Edge Functions → Secrets),
-otherwise Resend, otherwise it leaves findings pending:
+`web/api/send-alerts.ts` is a Vercel function that emails each user one digest of new findings through
+Microsoft 365 SMTP (`smtp.office365.com:587`, STARTTLS). Supabase pg_cron calls it every 6 hours
+(minute 20) with the scheduler secret; anyone else gets 401. It lives on Vercel because Supabase
+Edge Functions can't open connections on port 587.
+
+Vercel → Project → Settings → Environment Variables (Production):
 
 | Name | Value |
 | --- | --- |
-| `MS_TENANT_ID` | Directory (tenant) ID of the Entra app |
-| `MS_CLIENT_ID` | Application (client) ID |
-| `MS_CLIENT_SECRET` | Client secret value |
-| `MS_SENDER` | Mailbox to send from, e.g. `alerts@yourdomain.com` |
-| `SITE_URL` | `https://patchping.vercel.app` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → `service_role` (or a secret key). Mark as Sensitive. |
+| `SMTP_USER` | Full mailbox address, e.g. `alerts@yourdomain.com` |
+| `SMTP_PASS` | That mailbox's password. Mark as Sensitive. |
+| `MAIL_FROM` | Optional. `PatchPing <alerts@yourdomain.com>` (must be the same mailbox) |
+| `SITE_URL` | Optional. Defaults to `https://patchping.vercel.app` |
 
-The Entra app needs the Microsoft Graph application permission `Mail.Send` with admin consent.
-Edge functions can't use SMTP port 587, which is why alerts go through Graph over HTTPS.
+Redeploy after adding them. Without SMTP credentials, findings stay pending and nothing is lost.
 
 ## Develop
 

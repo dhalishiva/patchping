@@ -1,5 +1,8 @@
 {
-  "rewrites": [{ "source": "/((?!assets/|favicon|logo|og|robots|sitemap).*)", "destination": "/index.html" }],
+  "functions": {
+    "api/send-alerts.ts": { "maxDuration": 300 }
+  },
+  "rewrites": [{ "source": "/((?!api/|assets/|favicon|logo|og|robots|sitemap).*)", "destination": "/index.html" }],
   "headers": [
     {
       "source": "/(.*)",
