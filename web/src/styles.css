@@ -207,6 +207,7 @@ header a, .site-footer a { text-decoration: none; }
 .field textarea { font-family: var(--mono); font-size: 0.9rem; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 25%, transparent); }
 .field small { font-weight: 400; }
+.code-input { font-family: var(--mono) !important; font-size: 1.6rem !important; letter-spacing: 0.4em; padding: 12px 14px !important; max-width: 260px; }
 .check { display: flex; gap: 10px; align-items: flex-start; font-size: var(--t-sm); }
 .check input { margin-top: 4px; accent-color: var(--ink); width: 16px; height: 16px; }
 .form-error { color: var(--alert-ink); background: var(--alert-tint); padding: 10px 12px; border-radius: var(--r-sm); margin: 0; }

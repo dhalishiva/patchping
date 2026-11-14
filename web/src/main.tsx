@@ -1,6 +1,6 @@
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { SessionContext, supabase } from "./lib/supabase";
 import { AppLayout, SiteLayout } from "./components/Layout";
@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import { ForgotPassword, Login, ResetPassword, Signup } from "./pages/Auth";
+import { Login, Signup } from "./pages/Auth";
 import { Disclaimer, Privacy, Refunds, Terms } from "./pages/legal/Legal";
 import Dashboard from "./pages/app/Dashboard";
 import AppDetail from "./pages/app/AppDetail";
@@ -41,8 +41,8 @@ function Root() {
             <Route path="disclaimer" element={<Disclaimer />} />
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
-            <Route path="forgot-password" element={<ForgotPassword />} />
-            <Route path="reset-password" element={<ResetPassword />} />
+            <Route path="forgot-password" element={<Navigate to="/login" replace />} />
+            <Route path="reset-password" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<NotFound />} />
           </Route>
           <Route path="app" element={<AppLayout />}>

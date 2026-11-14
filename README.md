@@ -37,15 +37,34 @@ VITE_SUPABASE_URL=https://vswctqwxvesjripvwsex.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Edge function secrets (Supabase dashboard → Edge Functions → Secrets):
+## Sign-in
 
-| Name | Needed for | Example |
+Passwordless email codes. `signInWithOtp` sends a 6-digit code, `verifyOtp` checks it. The same flow
+creates the account (on /signup) or logs in (on /login). Templates are in `supabase/templates/`:
+
+| Supabase template | File | Subject |
 | --- | --- | --- |
-| `RESEND_API_KEY` | Sending alert emails | `re_...` |
-| `MAIL_FROM` | Sender address (domain verified in Resend) | `PatchPing <alerts@kriosity.in>` |
-| `SITE_URL` | Links in emails | `https://patchping.kriosity.in` |
+| Confirm signup | `confirm-signup.html` | `Your PatchPing code` |
+| Magic Link | `magic-link.html` | `Your PatchPing sign-in code` |
 
-Without `RESEND_API_KEY`, findings stay pending and are emailed once a key is added.
+Auth email is sent through Microsoft 365 SMTP (Supabase → Authentication → Emails → SMTP Settings):
+host `smtp.office365.com`, port `587`, username and sender = the full mailbox address.
+
+## Alert emails
+
+The `notify` function uses Microsoft Graph when these secrets are set (Supabase → Edge Functions → Secrets),
+otherwise Resend, otherwise it leaves findings pending:
+
+| Name | Value |
+| --- | --- |
+| `MS_TENANT_ID` | Directory (tenant) ID of the Entra app |
+| `MS_CLIENT_ID` | Application (client) ID |
+| `MS_CLIENT_SECRET` | Client secret value |
+| `MS_SENDER` | Mailbox to send from, e.g. `alerts@yourdomain.com` |
+| `SITE_URL` | `https://patchping.vercel.app` |
+
+The Entra app needs the Microsoft Graph application permission `Mail.Send` with admin consent.
+Edge functions can't use SMTP port 587, which is why alerts go through Graph over HTTPS.
 
 ## Develop
 

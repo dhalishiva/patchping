@@ -41,7 +41,7 @@ export function Terms() {
       <h2>2. Your account</h2>
       <ul>
         <li>You must be at least 18, or the age of majority where you live, to create an account.</li>
-        <li>Give a valid email address and keep your password secure. You are responsible for activity under your account.</li>
+        <li>Give a valid email address that only you control, since sign-in codes are sent there. You are responsible for activity under your account.</li>
         <li>Tell us promptly at {mail} if you think your account has been accessed without permission.</li>
       </ul>
 
@@ -143,7 +143,7 @@ export function Privacy() {
 
       <h2>What we collect</h2>
       <ul>
-        <li><strong>Account data:</strong> your email address and a securely hashed password, or sign-in links sent to your email.</li>
+        <li><strong>Account data:</strong> your email address. We don't use passwords: you sign in with a one-time code sent to your email.</li>
         <li><strong>Alert settings:</strong> the email you want alerts sent to, whether alerts are on, and your severity threshold.</li>
         <li><strong>Your stack:</strong> the names you give your apps, and package names and versions. When you upload a lockfile it is read in your browser; the file itself is never uploaded.</li>
         <li><strong>Results:</strong> vulnerability matches for your packages and whether you dismissed or fixed them.</li>
@@ -154,7 +154,7 @@ export function Privacy() {
       <h2>Why we use it</h2>
       <ul>
         <li>To run the Service: check your packages, show results and send the alerts you asked for.</li>
-        <li>To send account emails: confirmations, password resets and important notices about the Service.</li>
+        <li>To send account emails: sign-in codes and important notices about the Service.</li>
         <li>To keep the Service secure and working, and to answer you when you contact us.</li>
       </ul>
       <p>We rely on your consent, given when you create an account, and on the legitimate uses the law allows for running a service you asked for.</p>
@@ -162,7 +162,7 @@ export function Privacy() {
       <h2>Who processes it</h2>
       <ul>
         <li><strong>Supabase</strong> hosts our database, sign-in and background jobs, in its Mumbai (ap-south-1) region.</li>
-        <li><strong>Resend</strong> delivers our emails.</li>
+        <li><strong>Microsoft</strong> (Microsoft 365) delivers our emails.</li>
         <li><strong>Vercel</strong> serves the website.</li>
         <li><strong>Google Fonts</strong> serves the site's typefaces, which means your browser contacts Google when pages load.</li>
         <li><strong>OSV.dev</strong> receives package names and versions to check. It never receives your email or account details.</li>

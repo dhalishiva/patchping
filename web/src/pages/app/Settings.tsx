@@ -12,8 +12,6 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const [pw, setPw] = useState("");
-  const [pwMsg, setPwMsg] = useState("");
 
   useEffect(() => {
     supabase.from("profiles").select("*").maybeSingle().then(({ data }) => setP(data as Profile));
@@ -30,14 +28,6 @@ export default function Settings() {
     }).eq("id", p.id);
     if (error) setError(error.message);
     else setSaved("Alert settings saved.");
-  }
-
-  async function changePassword(e: FormEvent) {
-    e.preventDefault();
-    setPwMsg("");
-    const { error } = await supabase.auth.updateUser({ password: pw });
-    setPwMsg(error ? error.message : "Password changed.");
-    if (!error) setPw("");
   }
 
   async function deleteAccount() {
@@ -84,18 +74,6 @@ export default function Settings() {
           {saved && <p className="form-ok" role="status">{saved}</p>}
           <button className="btn">Save alert settings</button>
         </form>
-      </section>
-
-      <section>
-        <h2>Password</h2>
-        <form onSubmit={changePassword} className="inline-form">
-          <label className="field grow">
-            <span>New password</span>
-            <input type="password" minLength={8} required value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
-          </label>
-          <button className="btn btn-ghost">Change password</button>
-        </form>
-        {pwMsg && <p className="small" role="status">{pwMsg}</p>}
       </section>
 
       <section>

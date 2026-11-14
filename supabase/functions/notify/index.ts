@@ -1,6 +1,9 @@
 // PatchPing notifier: emails each user one digest of new, un-notified findings.
-// Called by pg_cron (x-cron-secret). Sends through Resend when RESEND_API_KEY is set;
-// otherwise it leaves findings pending so nothing is lost.
+// Called by pg_cron (x-cron-secret). Sends through Microsoft Graph (preferred) or Resend,
+// whichever is configured; if neither is, findings stay pending so nothing is lost.
+//
+// Microsoft Graph secrets: MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET, MS_SENDER (mailbox address)
+// Resend secrets:          RESEND_API_KEY, MAIL_FROM
 import { adminClient, corsHeaders, isCron, json } from "../_shared/common.ts";
 
 const RANK: Record<string, number> = { unknown: 1, low: 1, moderate: 2, high: 3, critical: 4 };
@@ -57,6 +60,55 @@ function renderEmail(rows: Row[], site: string) {
   return { subject, html, text };
 }
 
+type Mail = { to: string; subject: string; html: string; text: string };
+type Sender = (m: Mail) => Promise<{ ok: boolean; detail?: string }>;
+
+let graphToken: { value: string; exp: number } | null = null;
+
+function graphSender(): Sender | null {
+  const tenant = Deno.env.get("MS_TENANT_ID"), clientId = Deno.env.get("MS_CLIENT_ID");
+  const secret = Deno.env.get("MS_CLIENT_SECRET"), mailbox = Deno.env.get("MS_SENDER");
+  if (!tenant || !clientId || !secret || !mailbox) return null;
+  return async ({ to, subject, html }) => {
+    if (!graphToken || graphToken.exp < Date.now() + 60_000) {
+      const res = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId, client_secret: secret,
+          scope: "https://graph.microsoft.com/.default", grant_type: "client_credentials",
+        }),
+      });
+      const j = await res.json();
+      if (!res.ok) return { ok: false, detail: `token ${res.status} ${j.error ?? ""}` };
+      graphToken = { value: j.access_token, exp: Date.now() + j.expires_in * 1000 };
+    }
+    const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(mailbox)}/sendMail`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${graphToken.value}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: { subject, body: { contentType: "HTML", content: html }, toRecipients: [{ emailAddress: { address: to } }] },
+        saveToSentItems: false,
+      }),
+    });
+    return res.status === 202 ? { ok: true } : { ok: false, detail: `graph ${res.status} ${await res.text()}` };
+  };
+}
+
+function resendSender(): Sender | null {
+  const key = Deno.env.get("RESEND_API_KEY");
+  if (!key) return null;
+  const from = Deno.env.get("MAIL_FROM") ?? "PatchPing <onboarding@resend.dev>";
+  return async ({ to, subject, html, text }) => {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, html, text }),
+    });
+    return res.ok ? { ok: true } : { ok: false, detail: `resend ${res.status} ${await res.text()}` };
+  };
+}
+
 async function markNotified(admin: ReturnType<typeof adminClient>, ids: string[], at: string) {
   for (let i = 0; i < ids.length; i += 150) {
     await admin.from("findings").update({ notified_at: at }).in("id", ids.slice(i, i + 150));
@@ -68,9 +120,8 @@ Deno.serve(async (req) => {
   const admin = adminClient();
   if (!(await isCron(req, admin))) return json({ error: "Unauthorized" }, 401);
 
-  const apiKey = Deno.env.get("RESEND_API_KEY");
-  if (!apiKey) return json({ ok: true, skipped: "RESEND_API_KEY not set; findings stay pending" });
-  const from = Deno.env.get("MAIL_FROM") ?? "PatchPing <onboarding@resend.dev>";
+  const send = graphSender() ?? resendSender();
+  if (!send) return json({ ok: true, skipped: "No email provider configured; findings stay pending" });
   const site = (Deno.env.get("SITE_URL") ?? "https://patchping.kriosity.in").replace(/\/$/, "");
 
   const { data: pending, error } = await admin
@@ -105,19 +156,15 @@ Deno.serve(async (req) => {
     }
 
     const { subject, html, text } = renderEmail(toSend, site);
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [to], subject, html, text }),
-    });
-    if (res.ok) {
+    const result = await send({ to, subject, html, text });
+    if (result.ok) {
       sent++;
       await markNotified(admin, rows.map((r) => r.id), now);
     } else {
       failed++;
-      console.error("resend failed", p.id, res.status, await res.text());
+      console.error("send failed", p.id, result.detail);
     }
-    await new Promise((r) => setTimeout(r, 250)); // stay under Resend's rate limit
+    await new Promise((r) => setTimeout(r, 500)); // stay under provider rate limits
   }
   return json({ ok: true, sent, failed });
 });
