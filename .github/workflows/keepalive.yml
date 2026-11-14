@@ -1,0 +1,15 @@
+# Keeps the free-tier Supabase project from pausing after 7 quiet days,
+# so the 6-hourly pg_cron scans keep running. Uses only the public key.
+name: keep-supabase-awake
+on:
+  schedule:
+    - cron: "17 5 */2 * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query the database through the REST API
+        run: |
+          curl -fsS "https://vswctqwxvesjripvwsex.supabase.co/rest/v1/apps?select=id&limit=1" \
+            -H "apikey: sb_publishable_sbr7AEivTLoW5QV9ww-WCQ_PtFPLnyT" -o /dev/null -w "%{http_code}\n"
